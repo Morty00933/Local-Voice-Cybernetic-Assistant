@@ -1,0 +1,23 @@
+{{- if .Values.qdrant.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-qdrant
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+    app.kubernetes.io/component: qdrant
+spec:
+  type: {{ .Values.qdrant.service.type }}
+  ports:
+    - port: {{ .Values.qdrant.service.port }}
+      targetPort: {{ .Values.qdrant.service.port }}
+      protocol: TCP
+      name: http
+    - port: 6334
+      targetPort: 6334
+      protocol: TCP
+      name: grpc
+  selector:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

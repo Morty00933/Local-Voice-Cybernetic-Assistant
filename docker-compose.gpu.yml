@@ -1,0 +1,36 @@
+services:
+  stt:
+    build:
+      context: .
+      dockerfile: services/stt/Dockerfile.gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  tts:
+    build:
+      context: .
+      dockerfile: services/tts/Dockerfile.gpu
+    environment:
+      - TTS_ENGINE=xtts
+      - TTS_DEVICE=cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

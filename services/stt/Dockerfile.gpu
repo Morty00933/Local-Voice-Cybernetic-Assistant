@@ -1,0 +1,33 @@
+FROM nvidia/cuda:12.4.0-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends software-properties-common gpg-agent \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+       python3.12 python3.12-venv python3.12-dev libsndfile1 ffmpeg curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+RUN useradd -m -u 1000 app
+WORKDIR /app
+
+COPY services/stt/requirements.txt .
+RUN uv pip install --system --no-cache --python python3.12 -r requirements.txt
+
+COPY shared/ /app/shared/
+COPY services/stt/ /app/services/stt/
+
+RUN mkdir -p /models && chown app:app /models
+USER app
+
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD python3.12 -c "import httpx; r=httpx.get('http://localhost:8000/health'); exit(0 if r.status_code==200 else 1)"
+
+CMD ["python3.12", "-m", "uvicorn", "services.stt.streaming:app", "--host", "0.0.0.0", "--port", "8000"]

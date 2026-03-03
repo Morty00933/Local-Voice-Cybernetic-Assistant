@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-tts
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tts
+spec:
+  type: {{ .Values.tts.service.type }}
+  ports:
+    - port: {{ .Values.tts.service.port }}
+      targetPort: {{ .Values.tts.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: tts
+    app.kubernetes.io/instance: {{ .Release.Name }}

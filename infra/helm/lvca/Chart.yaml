@@ -1,0 +1,6 @@
+apiVersion: v2
+name: lvca
+description: Local Voice Cybernetic Assistant
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

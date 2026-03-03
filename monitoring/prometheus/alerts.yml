@@ -1,0 +1,64 @@
+groups:
+  - name: lvca_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "{{ $labels.job }} has error rate > 10% for 5 minutes."
+
+      - alert: SlowAPIResponse
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow API response on {{ $labels.job }}"
+          description: "P95 response time > 5s on {{ $labels.job }}."
+
+      - alert: STTLatencyHigh
+        expr: histogram_quantile(0.95, rate(stt_transcription_duration_seconds_bucket[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "STT latency too high"
+          description: "P95 STT transcription > 3 seconds."
+
+      - alert: TTSLatencyHigh
+        expr: histogram_quantile(0.95, rate(tts_synthesis_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TTS latency too high"
+          description: "P95 TTS synthesis > 2 seconds."
+
+      - alert: OllamaDown
+        expr: up{job="brain"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Brain service is down"
+          description: "Brain service unreachable for 2 minutes."
+
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.job }}"
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 > 4096
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.job }}"
+          description: "{{ $labels.job }} using > 4GB RSS."

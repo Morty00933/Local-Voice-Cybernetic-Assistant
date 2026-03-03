@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-tts
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tts
+spec:
+  replicas: {{ .Values.tts.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tts
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tts
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: tts
+          image: "{{ .Values.tts.image.repository }}:{{ .Values.tts.image.tag }}"
+          imagePullPolicy: {{ .Values.tts.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.tts.service.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+          {{- if .Values.tts.gpu.enabled }}
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: {{ .Values.tts.gpu.cudaVisibleDevices | quote }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.tts.resources | nindent 12 }}
+          {{- if .Values.tts.gpu.enabled }}
+            limits:
+              nvidia.com/gpu: 1
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.tts.livenessProbe.path }}
+              port: {{ .Values.tts.service.port }}
+            initialDelaySeconds: {{ .Values.tts.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tts.livenessProbe.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.tts.readinessProbe.path }}
+              port: {{ .Values.tts.service.port }}
+            initialDelaySeconds: {{ .Values.tts.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tts.readinessProbe.periodSeconds }}
+          volumeMounts:
+            - name: models
+              mountPath: {{ .Values.tts.volumes.models.mountPath }}
+            - name: voices
+              mountPath: {{ .Values.tts.volumes.voices.mountPath }}
+          {{- include "lvca.securityContext" . | nindent 10 }}
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-tts-models
+        - name: voices
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-tts-voices

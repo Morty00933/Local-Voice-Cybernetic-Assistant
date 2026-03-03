@@ -1,0 +1,14 @@
+# Hybrid mode: infrastructure runs on the host, apps run in K8s.
+# Usage: helm install lvca . -f values.yaml -f values-hybrid.yaml
+
+ollama:
+  enabled: false
+qdrant:
+  enabled: false
+redis:
+  enabled: false
+
+externalServices:
+  ollama: "host.minikube.internal:11434"
+  qdrant: "host.minikube.internal:6333"
+  redis: "host.minikube.internal:6379"

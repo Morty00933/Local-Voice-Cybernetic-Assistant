@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-stt
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+    app.kubernetes.io/component: stt
+spec:
+  replicas: {{ .Values.stt.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: stt
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: stt
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: stt
+          image: "{{ .Values.stt.image.repository }}:{{ .Values.stt.image.tag }}"
+          imagePullPolicy: {{ .Values.stt.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.stt.service.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+          {{- if .Values.stt.gpu.enabled }}
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: {{ .Values.stt.gpu.cudaVisibleDevices | quote }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.stt.resources | nindent 12 }}
+          {{- if .Values.stt.gpu.enabled }}
+            limits:
+              nvidia.com/gpu: 1
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.stt.livenessProbe.path }}
+              port: {{ .Values.stt.service.port }}
+            initialDelaySeconds: {{ .Values.stt.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.stt.livenessProbe.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.stt.readinessProbe.path }}
+              port: {{ .Values.stt.service.port }}
+            initialDelaySeconds: {{ .Values.stt.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.stt.readinessProbe.periodSeconds }}
+          volumeMounts:
+            - name: models
+              mountPath: {{ .Values.stt.volumes.models.mountPath }}
+          {{- include "lvca.securityContext" . | nindent 10 }}
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-stt-models

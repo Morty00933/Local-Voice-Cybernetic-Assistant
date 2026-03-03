@@ -1,0 +1,39 @@
+{{- if .Values.stt.volumes }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-stt-models
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: {{ .Values.stt.volumes.models.size }}
+---
+{{- end }}
+{{- if .Values.tts.volumes }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-tts-models
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: {{ .Values.tts.volumes.models.size }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-tts-voices
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: {{ .Values.tts.volumes.voices.size }}
+{{- end }}

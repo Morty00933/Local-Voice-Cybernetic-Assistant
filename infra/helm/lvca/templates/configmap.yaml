@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+data:
+  LOG_LEVEL: {{ .Values.logLevel | quote }}
+  ENV: {{ .Values.env | quote }}
+
+  # Ollama
+  OLLAMA_BASE_URL: {{ include "lvca.ollamaUrl" . | quote }}
+  OLLAMA_MODEL_CHAT: "qwen2.5:14b-instruct-q4_K_M"
+  OLLAMA_MODEL_EMBED: "nomic-embed-text"
+  OLLAMA_TIMEOUT: "120"
+  OLLAMA_TEMPERATURE: {{ .Values.brain.config.temperature | default 0.2 | quote }}
+
+  # Qdrant
+  QDRANT_URL: {{ include "lvca.qdrantUrl" . | quote }}
+  QDRANT_COLLECTION: "lvca_knowledge"
+
+  # Redis
+  REDIS_URL: {{ include "lvca.redisUrl" . | quote }}
+
+  # STT
+  STT_MODEL_SIZE: {{ .Values.stt.config.modelSize | quote }}
+  STT_DEVICE: {{ .Values.stt.config.device | quote }}
+  STT_COMPUTE_TYPE: {{ .Values.stt.config.computeType | quote }}
+
+  # TTS
+  TTS_ENGINE: {{ .Values.tts.config.engine | quote }}
+  TTS_DEVICE: {{ .Values.tts.config.device | quote }}
+
+  # Service URLs (for orchestrator)
+  STT_URL: "http://{{ .Release.Name }}-stt:{{ .Values.stt.service.port }}"
+  BRAIN_URL: "http://{{ .Release.Name }}-brain:{{ .Values.brain.service.port }}"
+  TTS_URL: "http://{{ .Release.Name }}-tts:{{ .Values.tts.service.port }}"

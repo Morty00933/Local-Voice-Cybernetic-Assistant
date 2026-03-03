@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-brain
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+    app.kubernetes.io/component: brain
+spec:
+  type: {{ .Values.brain.service.type }}
+  ports:
+    - port: {{ .Values.brain.service.port }}
+      targetPort: {{ .Values.brain.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: brain
+    app.kubernetes.io/instance: {{ .Release.Name }}

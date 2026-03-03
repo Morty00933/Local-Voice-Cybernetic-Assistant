@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-orchestrator
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+    app.kubernetes.io/component: orchestrator
+spec:
+  replicas: {{ .Values.orchestrator.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orchestrator
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: orchestrator
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      initContainers:
+        - name: wait-stt
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z {{ .Release.Name }}-stt {{ .Values.stt.service.port }}; do sleep 2; done"]
+        - name: wait-brain
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z {{ .Release.Name }}-brain {{ .Values.brain.service.port }}; do sleep 2; done"]
+        - name: wait-tts
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z {{ .Release.Name }}-tts {{ .Values.tts.service.port }}; do sleep 2; done"]
+      containers:
+        - name: orchestrator
+          image: "{{ .Values.orchestrator.image.repository }}:{{ .Values.orchestrator.image.tag }}"
+          imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.orchestrator.service.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+          resources:
+            {{- toYaml .Values.orchestrator.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.orchestrator.livenessProbe.path }}
+              port: {{ .Values.orchestrator.service.port }}
+            initialDelaySeconds: {{ .Values.orchestrator.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.orchestrator.livenessProbe.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.orchestrator.readinessProbe.path }}
+              port: {{ .Values.orchestrator.service.port }}
+            initialDelaySeconds: {{ .Values.orchestrator.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.orchestrator.readinessProbe.periodSeconds }}
+          {{- include "lvca.securityContext" . | nindent 10 }}

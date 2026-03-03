@@ -1,0 +1,55 @@
+env: development
+logLevel: DEBUG
+
+stt:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 4Gi
+  gpu:
+    enabled: false
+  config:
+    modelSize: "base"
+    computeType: "float32"
+    device: "cpu"
+
+brain:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+tts:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 4Gi
+  gpu:
+    enabled: false
+  config:
+    engine: "piper"
+    device: "cpu"
+
+orchestrator:
+  ingress:
+    enabled: false
+
+ollama:
+  gpu:
+    enabled: false
+  resources:
+    requests:
+      cpu: 500m
+      memory: 4Gi
+    limits:
+      cpu: "2"
+      memory: 8Gi

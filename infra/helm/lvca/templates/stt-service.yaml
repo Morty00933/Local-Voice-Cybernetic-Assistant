@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-stt
+  labels:
+    {{- include "lvca.labels" . | nindent 4 }}
+    app.kubernetes.io/component: stt
+spec:
+  type: {{ .Values.stt.service.type }}
+  ports:
+    - port: {{ .Values.stt.service.port }}
+      targetPort: {{ .Values.stt.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: stt
+    app.kubernetes.io/instance: {{ .Release.Name }}

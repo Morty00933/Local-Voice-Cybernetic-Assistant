@@ -1,0 +1,192 @@
+# ══════════════════════════════════════════════════
+#  LVCA — .gitignore
+# ══════════════════════════════════════════════════
+
+# ── Secrets & credentials ─────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# ── Python ────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.virtualenv/
+
+# uv
+.uv/
+uv.lock
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+# ── AI Models ─────────────────────────────────────
+# Don't commit large model files
+models/
+*.gguf
+*.onnx
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+*.pkl
+*.joblib
+
+# Piper TTS voice files
+*.onnx.json
+
+# ── Docker ────────────────────────────────────────
+# Docker volumes are managed separately
+.docker/
+
+# ── Ollama ────────────────────────────────────────
+# Ollama model cache (usually in Docker volume)
+.ollama/
+
+# ── Qdrant ────────────────────────────────────────
+qdrant_storage/
+qdrant_snapshots/
+
+# ── Redis ─────────────────────────────────────────
+dump.rdb
+*.rdb
+*.aof
+
+# ── Knowledge base ────────────────────────────────
+# Don't commit personal/sensitive documents
+# (keep example.md as template)
+knowledge/*.pdf
+knowledge/*.txt
+!knowledge/example.md
+
+# ── Logs ──────────────────────────────────────────
+*.log
+*.log.*
+logs/
+log/
+
+# ── Screenshots & media ───────────────────────────
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.ico
+*.wav
+*.mp3
+*.mp4
+*.webm
+!docs/**/*.png
+!docs/**/*.gif
+
+# ── Temp & cache ──────────────────────────────────
+_tmp_sources/
+tmp/
+temp/
+.cache/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDEs ──────────────────────────────────────────
+# JetBrains (PyCharm)
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Vim
+*.vim
+.netrwhist
+
+# ── OS ────────────────────────────────────────────
+# Windows
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+
+# ── Testing ───────────────────────────────────────
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+*.coveragerc
+nosetests.xml
+test-results/
+test_output.wav
+test_screenshot.png
+
+# ── Jupyter ───────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Node (if any frontend tooling) ───────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Kubernetes ────────────────────────────────────
+# Don't commit generated kubeconfig or secrets
+kubeconfig
+*.kubeconfig
+infra/helm/lvca/charts/
+infra/helm/lvca/Chart.lock
+k8s-secrets/
+
+# ── Monitoring data ───────────────────────────────
+# Grafana & Prometheus persistent data
+monitoring/grafana/data/
+monitoring/prometheus/data/
+
+# ── Response & debug artifacts ────────────────────
+response.txt
+debug_*.txt
+output_*.wav
+output_*.png

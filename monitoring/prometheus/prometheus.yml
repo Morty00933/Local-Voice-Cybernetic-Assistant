@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: lvca
+
+rule_files:
+  - alerts.yml
+
+scrape_configs:
+  - job_name: orchestrator
+    static_configs:
+      - targets: ["orchestrator:8000"]
+
+  - job_name: stt
+    static_configs:
+      - targets: ["stt:8000"]
+
+  - job_name: brain
+    static_configs:
+      - targets: ["brain:8000"]
+
+  - job_name: tts
+    static_configs:
+      - targets: ["tts:8000"]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

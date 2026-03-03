@@ -1,0 +1,236 @@
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+env: production
+logLevel: INFO
+
+# ── STT Service ──────────────────────────────────────────────────
+stt:
+  replicaCount: 1
+  image:
+    repository: lvca/stt
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 8Gi
+  gpu:
+    enabled: true
+    cudaVisibleDevices: "0"
+  config:
+    modelSize: "large-v3-turbo"
+    device: "auto"
+    computeType: "float16"
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 15
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 10
+  service:
+    type: ClusterIP
+    port: 8000
+  volumes:
+    models:
+      size: 20Gi
+      mountPath: /models
+
+# ── Brain Service ────────────────────────────────────────────────
+brain:
+  replicaCount: 1
+  image:
+    repository: lvca/brain
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  config:
+    maxContext: 5
+    temperature: 0.2
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 15
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  service:
+    type: ClusterIP
+    port: 8000
+
+# ── TTS Service ──────────────────────────────────────────────────
+tts:
+  replicaCount: 1
+  image:
+    repository: lvca/tts
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 8Gi
+  gpu:
+    enabled: true
+    cudaVisibleDevices: "0"
+  config:
+    engine: "xtts-v2"
+    device: "cuda"
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 15
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 10
+  service:
+    type: ClusterIP
+    port: 8000
+  volumes:
+    models:
+      size: 10Gi
+      mountPath: /models
+    voices:
+      size: 5Gi
+      mountPath: /voices
+
+# ── Orchestrator ─────────────────────────────────────────────────
+orchestrator:
+  replicaCount: 1
+  image:
+    repository: lvca/orchestrator
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  livenessProbe:
+    path: /api/health
+    initialDelaySeconds: 15
+    periodSeconds: 15
+  readinessProbe:
+    path: /api/health
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  service:
+    type: ClusterIP
+    port: 8000
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: lvca.local
+        paths:
+          - path: /
+            pathType: Prefix
+
+# ── Infrastructure ───────────────────────────────────────────────
+ollama:
+  enabled: true
+  image:
+    repository: ollama/ollama
+    tag: latest
+  resources:
+    requests:
+      cpu: "1"
+      memory: 8Gi
+    limits:
+      cpu: "4"
+      memory: 12Gi
+  gpu:
+    enabled: true
+  service:
+    type: ClusterIP
+    port: 11434
+  persistence:
+    size: 20Gi
+  models:
+    - qwen2.5:14b-instruct-q4_K_M
+    - nomic-embed-text
+
+qdrant:
+  enabled: true
+  image:
+    repository: qdrant/qdrant
+    tag: v1.9.1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  service:
+    type: ClusterIP
+    port: 6333
+  persistence:
+    size: 10Gi
+
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: 7-alpine
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+  service:
+    type: ClusterIP
+    port: 6379
+  persistence:
+    size: 2Gi
+  config:
+    maxmemory: "256mb"
+    maxmemoryPolicy: "allkeys-lru"
+
+# ── External services (used when infra is disabled) ──────────────
+externalServices:
+  ollama: ""
+  qdrant: ""
+  redis: ""
+
+# ── Monitoring ───────────────────────────────────────────────────
+monitoring:
+  prometheus:
+    enabled: true
+    scrapeInterval: 15s
+    targets:
+      - job: stt
+        target: "stt:8000"
+        path: /metrics
+      - job: brain
+        target: "brain:8000"
+        path: /metrics
+      - job: tts
+        target: "tts:8000"
+        path: /metrics
+      - job: orchestrator
+        target: "orchestrator:8000"
+        path: /metrics
+  grafana:
+    enabled: true
+    adminPassword: admin
